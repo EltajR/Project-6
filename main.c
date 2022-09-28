@@ -15,10 +15,10 @@ typedef struct candidate{
 #define false 0
 
 
-char *read_str(void);
-int read_int(void);
-int is_valid_vote(candidate *, int ,char *);
-int initialize_candidates(candidate *candidates , char *candidate_names);
+char *read_str();
+int read_int();
+int is_valid_vote(candidate *candidates, int len_c_array , char *vote_by_user);
+int initialize_candidates(candidate *candidates, char *candidate_names);
 int has_majority(candidate *candidates, int len_c_array, int majority);
 int find_min(candidate *candidates, int len_c_array);
 int is_tie(candidate *candidates, int len_c_array, int min);
@@ -59,6 +59,12 @@ int main(){
                }
             else {
                 printf("%s\n", "Invalid vote");
+                // Possible source of error
+                // Needs to be dealt with
+                // ---------------------------
+                i = i - 1;
+                num_of_voters = num_of_voters - 1;
+                // ---------------------------
                 break;
                }
             }
@@ -67,9 +73,7 @@ int main(){
        // At this point all the necessary data has been collected from the user
 
 
-
-
-       // ------------------------------------------------------
+       // --------------------< Main logic >-------------------------
         int majority = num_of_voters / 2 + 1;
 
         int index = -1;
@@ -78,10 +82,6 @@ int main(){
         count_votes(candidates, len_c_array, num_of_voters, preferences);
 
         int min = find_min(candidates, len_c_array);
-        printf("%i\n", candidates[0].vote_count);
-        printf("%i\n", candidates[1].vote_count);
-        printf("%i\n", candidates[2].vote_count);
-        printf("%i\n", min);
         // Check if it is a tie. If yes, break
         if(is_tie(candidates, len_c_array, min) == true) break;
         // If it is not a tie, eliminate the candidate(s) with the minimum votes
@@ -94,8 +94,6 @@ int main(){
         if(index != -1) printf("%s", candidates[index].name);
         else print_winners(candidates, len_c_array);
 }
-
-
 
 
 
@@ -113,10 +111,10 @@ int read_int(){
 
 // If the name entered by the user is a valid candidate, return the index of the candidate in the array.
 // Otherwise, return -1 to indicate that, the vote is invalid
-int is_valid_vote(candidate *candidates, int arr_length, char *user_input){
-    for (int i = 0; i < arr_length; ++i) {
+int is_valid_vote(candidate *candidates, int len_c_array, char *vote_by_user){
+    for (int i = 0; i < len_c_array; ++i) {
        candidate c = candidates[i];
-       if(strcmp(c.name, user_input) == 0) return c.index;
+       if(strcmp(c.name, vote_by_user) == 0) return c.index;
     }
     return -1;
 }
@@ -171,10 +169,10 @@ int is_tie(candidate *candidates, int len_c_array, int min){
     for (int i = 0; i < len_c_array; ++i) {
         candidate c = candidates[i];
         if(is_eliminated(c) == false) {
-            if (c.vote_count != min) return 0;
+            if (c.vote_count != min) return false;
         }
     }
-    return 1;
+    return true;
 }
 
 int is_eliminated(candidate c){
@@ -198,7 +196,6 @@ void count_votes(candidate *candidates, int arr_len, int num_of_voters, int pref
         }
         while (is_eliminated(candidates[candidate_index]) == true);
         candidates[candidate_index].vote_count++;
-        printf("%s: %i\n", "Counter value is", counter);
     }
 }
 
