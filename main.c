@@ -78,6 +78,10 @@ int main(){
         count_votes(candidates, len_c_array, num_of_voters, preferences);
 
         int min = find_min(candidates, len_c_array);
+        printf("%i\n", candidates[0].vote_count);
+        printf("%i\n", candidates[1].vote_count);
+        printf("%i\n", candidates[2].vote_count);
+        printf("%i\n", min);
         // Check if it is a tie. If yes, break
         if(is_tie(candidates, len_c_array, min) == true) break;
         // If it is not a tie, eliminate the candidate(s) with the minimum votes
@@ -187,30 +191,28 @@ void set_votes_to_default(candidate *candidates, int arr_len){
 void count_votes(candidate *candidates, int arr_len, int num_of_voters, int preferences[num_of_voters][arr_len]){
     for (int i = 0; i < num_of_voters; ++i) {
         int counter = 0;
-        candidate c;
+        int candidate_index;
         do{
-            int candidate_index = preferences[i][counter];
-            c = candidates[candidate_index];
+            candidate_index = preferences[i][counter];
             counter++;
         }
-        while (is_eliminated(c) == true);
-        c.vote_count++;
-        counter = 0;
+        while (is_eliminated(candidates[candidate_index]) == true);
+        candidates[candidate_index].vote_count++;
+        printf("%s: %i\n", "Counter value is", counter);
     }
 }
 
 void print_winners(candidate *candidates, int arr_len){
     for(int i = 0; i < arr_len; i++){
         candidate c = candidates[i];
-        if(is_eliminated(c) == false) printf("%s", c.name);
+        if(is_eliminated(c) == false) printf("%s\n", c.name);
     }
 }
 
 void eliminate_c_with_min_votes(candidate *candidates, int len_c_array, int min){
     for (int i = 0; i < len_c_array; ++i) {
-        candidate c = candidates[i];
-        if(is_eliminated(c) == false){
-        if (c.vote_count == min) c.eliminated = 1;
+        if(is_eliminated(candidates[i]) == false){
+        if (candidates[i].vote_count == min) candidates[i].eliminated = 1;
         }
     }
 }
