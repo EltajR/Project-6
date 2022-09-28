@@ -11,6 +11,8 @@ typedef struct candidate{
 
 #define MAX_CANDIDATES 9
 #define MAX_VOTERS 9
+#define true 1
+#define false 0
 
 
 char *read_str(void);
@@ -20,6 +22,11 @@ int initialize_candidates(candidate *candidates , char *candidate_names);
 int has_majority(candidate *candidates, int len_c_array, int majority);
 int find_min(candidate *candidates, int len_c_array);
 int is_tie(candidate *candidates, int len_c_array, int min);
+int is_eliminated(candidate c);
+void set_votes_to_default(candidate *candidates, int arr_len);
+void print_winners(candidate *candidates, int arr_len);
+void count_votes(candidate *candidates, int arr_len, int num_of_voters, int preferences[num_of_voters][arr_len]);
+void eliminate_c_with_min_votes(candidate *candidates, int len_c_array, int min);
 
 
 int main(){
@@ -65,29 +72,27 @@ int main(){
        // ------------------------------------------------------
         int majority = num_of_voters / 2 + 1;
 
-        // Add votes for the first round
-        int counter = 0;
+        int index = -1;
+        do{
+        // First count votes
+        count_votes(candidates, len_c_array, num_of_voters, preferences);
 
-        // repeat as long as no one has won
-        for (int i = 0; i < num_of_voters; ++i) {
-        int candidate_index = preferences[i][counter];
-        candidates[candidate_index].vote_count++;
-    }
-      int index = has_majority(candidates, len_c_array, majority);
-      if(index == -1){
-          int min = find_min(candidates, len_c_array);
-          int bool = is_tie(candidates, len_c_array, min);
-          if(bool){
-          for (int i = 0; i < len_c_array; ++i) {
-              candidate c = candidates[i];
-              if(c.vote_count == min) c.eliminated = 1;
-          }}
-      }
+        int min = find_min(candidates, len_c_array);
+        // Check if it is a tie. If yes, break
+        if(is_tie(candidates, len_c_array, min) == true) break;
+        // If it is not a tie, eliminate the candidate(s) with the minimum votes
+        else eliminate_c_with_min_votes(candidates, len_c_array, min);
 
+        index = has_majority(candidates, len_c_array, majority);
+        set_votes_to_default(candidates, len_c_array);
+        } while (index == -1);
 
-
-    // <--
+        if(index != -1) printf("%s", candidates[index].name);
+        else print_winners(candidates, len_c_array);
 }
+
+
+
 
 
 char *read_str(){
@@ -134,17 +139,24 @@ int initialize_candidates(candidate *candidates, char *candidate_names){
 int has_majority(candidate *candidates, int len_c_array, int majority){
     for (int i = 0; i < len_c_array; ++i) {
         candidate c = candidates[i];
+        if(is_eliminated(c) == false){
         if(c.vote_count >= majority) return c.index;
+        }
     }
     return -1;
 }
 
 // finding minimum number of votes obtained
 int find_min(candidate *candidates, int len_c_array){
-    // initialize to the first element
-    int min  = candidates[0].vote_count;
-    for (int i = 1; i < len_c_array; ++i) {
-        if(candidates[i].vote_count < min) min = candidates[i].vote_count;
+
+    int counter = 0;
+    while (is_eliminated(candidates[counter]) == true) counter++;
+    int min  = candidates[counter].vote_count;
+    for (int i = counter + 1; i < len_c_array; ++i) {
+        candidate c = candidates[i];
+        if(is_eliminated(c) == false) {
+            if (c.vote_count < min) min = c.vote_count;
+        }
     }
     return min;
 }
@@ -154,7 +166,52 @@ int find_min(candidate *candidates, int len_c_array){
 int is_tie(candidate *candidates, int len_c_array, int min){
     for (int i = 0; i < len_c_array; ++i) {
         candidate c = candidates[i];
-        if(c.vote_count != min) return 0;
+        if(is_eliminated(c) == false) {
+            if (c.vote_count != min) return 0;
+        }
     }
     return 1;
 }
+
+int is_eliminated(candidate c){
+if(c.eliminated == 1) return true;
+else return false;
+}
+
+void set_votes_to_default(candidate *candidates, int arr_len){
+    for (int i = 0; i < arr_len; ++i) {
+        candidates[i].vote_count = 0;
+    }
+}
+
+void count_votes(candidate *candidates, int arr_len, int num_of_voters, int preferences[num_of_voters][arr_len]){
+    for (int i = 0; i < num_of_voters; ++i) {
+        int counter = 0;
+        candidate c;
+        do{
+            int candidate_index = preferences[i][counter];
+            c = candidates[candidate_index];
+            counter++;
+        }
+        while (is_eliminated(c) == true);
+        c.vote_count++;
+        counter = 0;
+    }
+}
+
+void print_winners(candidate *candidates, int arr_len){
+    for(int i = 0; i < arr_len; i++){
+        candidate c = candidates[i];
+        if(is_eliminated(c) == false) printf("%s", c.name);
+    }
+}
+
+void eliminate_c_with_min_votes(candidate *candidates, int len_c_array, int min){
+    for (int i = 0; i < len_c_array; ++i) {
+        candidate c = candidates[i];
+        if(is_eliminated(c) == false){
+        if (c.vote_count == min) c.eliminated = 1;
+        }
+    }
+}
+
